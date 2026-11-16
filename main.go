@@ -12,6 +12,7 @@ func main() {
 	database.ConnectDB()
 	r := gin.Default()
 	r.GET("/items", handler.GetItems)
+	r.POST("/goods-receipts", handler.CreateGoodsReceipt)
 	r.POST("/items", handler.CreateItem)
 	r.GET("/locations", handler.GetLocations)
 	r.POST("/locations", handler.CreateLocation)
