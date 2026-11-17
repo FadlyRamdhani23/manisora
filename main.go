@@ -18,6 +18,9 @@ func main() {
 	r.POST("/locations", handler.CreateLocation)
 	r.GET("/suppliers", handler.GetSuppliers)
 	r.POST("/suppliers", handler.CreateSupplier)
+	r.GET("/goods-receipts", handler.GetGoodsReceipts)
+	r.GET("/goods-receipts/:id", handler.GetGoodsReceipt)
+	r.POST("/goods-receipts/:id/post", handler.PostGoodsReceipt)
 	r.Run(":8080")
 
 }
