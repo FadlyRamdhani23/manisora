@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -11,6 +12,8 @@ import (
 	"manisora/model"
 	"manisora/repository"
 )
+
+var ErrNotFound = errors.New("data tidak ditemukan")
 
 func friendlyReceiptError(err error) error {
 	var mysqlErr *mysql.MySQLError
@@ -70,4 +73,64 @@ func CreateGoodsReceipt(gr model.GoodsReceipt) (model.GoodsReceipt, error) {
 		return gr, err
 	}
 	return gr, nil
+}
+
+func GetAllGoodsReceipts() ([]model.GoodsReceipt, error) {
+	return repository.GetAllGoodsReceipts()
+}
+
+func GetGoodsReceiptByID(id int64) (model.GoodsReceipt, error) {
+	gr, err := repository.GetGoodsReceiptByID(id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return gr, ErrNotFound
+	}
+	return gr, err
+}
+
+var ErrNotDraft = errors.New("hanya dokumen berstatus DRAFT yang bisa di-post")
+
+func PostGoodsReceipt(id int64) (model.GoodsReceipt, error) {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return model.GoodsReceipt{}, err
+	}
+	defer tx.Rollback()
+
+	status, locationID, err := repository.LockGoodsReceipt(tx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return model.GoodsReceipt{}, ErrNotFound
+	}
+	if err != nil {
+		return model.GoodsReceipt{}, err
+	}
+	if status != "DRAFT" {
+		return model.GoodsReceipt{}, ErrNotDraft
+	}
+
+	items, err := repository.GetGoodsReceiptItemsTx(tx, id)
+	if err != nil {
+		return model.GoodsReceipt{}, err
+	}
+	if len(items) == 0 {
+		return model.GoodsReceipt{}, errors.New("dokumen tidak punya barang")
+	}
+
+	for _, it := range items {
+		if err := repository.InsertLedger(tx, it.ItemID, locationID, it.Qty, 0,
+			"PURCHASE_RECEIPT", "GOODS_RECEIPT", id); err != nil {
+			return model.GoodsReceipt{}, err
+		}
+		if err := repository.AddStockBalance(tx, it.ItemID, locationID, it.Qty); err != nil {
+			return model.GoodsReceipt{}, err
+		}
+	}
+
+	if err := repository.SetGoodsReceiptStatus(tx, id, "POSTED"); err != nil {
+		return model.GoodsReceipt{}, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return model.GoodsReceipt{}, err
+	}
+	return GetGoodsReceiptByID(id)
 }
