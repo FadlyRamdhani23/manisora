@@ -115,3 +115,24 @@ func GetStockOpnameByID(id int64) (model.StockOpname, error) {
 	o.Items, err = scanOpnameItems(rows)
 	return o, err
 }
+
+func GetAllStockOpnames() ([]model.StockOpname, error) {
+	rows, err := database.DB.Query(
+		"SELECT id, doc_no, DATE_FORMAT(doc_date, '%Y-%m-%d'), location_id, status FROM stock_opnames ORDER BY id DESC LIMIT 100",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []model.StockOpname{}
+	for rows.Next() {
+		var o model.StockOpname
+		if err := rows.Scan(&o.ID, &o.DocNo, &o.DocDate, &o.LocationID, &o.Status); err != nil {
+			return nil, err
+		}
+		o.Items = []model.StockOpnameItem{}
+		list = append(list, o)
+	}
+	return list, rows.Err()
+}

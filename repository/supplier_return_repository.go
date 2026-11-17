@@ -147,3 +147,28 @@ func GetSupplierReturnByID(id int64) (model.SupplierReturn, error) {
 	}
 	return r, rows.Err()
 }
+
+func GetAllSupplierReturns() ([]model.SupplierReturn, error) {
+	rows, err := database.DB.Query(
+		"SELECT id, doc_no, DATE_FORMAT(doc_date, '%Y-%m-%d'), supplier_id, location_id, receipt_id, status FROM supplier_returns ORDER BY id DESC LIMIT 100",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []model.SupplierReturn{}
+	for rows.Next() {
+		var r model.SupplierReturn
+		var receipt sql.NullInt64
+		if err := rows.Scan(&r.ID, &r.DocNo, &r.DocDate, &r.SupplierID, &r.LocationID, &receipt, &r.Status); err != nil {
+			return nil, err
+		}
+		if receipt.Valid {
+			r.ReceiptID = receipt.Int64
+		}
+		r.Items = []model.SupplierReturnItem{}
+		list = append(list, r)
+	}
+	return list, rows.Err()
+}

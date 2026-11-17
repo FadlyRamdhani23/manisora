@@ -137,3 +137,8 @@ func PostSale(id int64) (model.Sale, error) {
 	}
 	return GetSaleByID(id)
 }
+
+// service/sale_service.go
+func GetAllSales() ([]model.Sale, error) {
+	return repository.GetAllSales()
+}

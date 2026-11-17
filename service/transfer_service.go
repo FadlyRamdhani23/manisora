@@ -229,3 +229,28 @@ func ReceiveTransfer(id int64, input model.ReceiveInput) (model.Transfer, error)
 	}
 	return GetTransferByID(id)
 }
+
+func GetAllTransfers() ([]model.Transfer, error) {
+	rows, err := database.DB.Query(
+		"SELECT id, doc_no, DATE_FORMAT(doc_date, '%Y-%m-%d'), from_location_id, to_location_id, status FROM transfers ORDER BY id DESC LIMIT 100",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []model.Transfer{}
+	for rows.Next() {
+		var t model.Transfer
+		if err := rows.Scan(&t.ID, &t.DocNo, &t.DocDate, &t.FromLocationID, &t.ToLocationID, &t.Status); err != nil {
+			return nil, err
+		}
+		t.Items = []model.TransferItem{}
+		list = append(list, t)
+	}
+	return list, rows.Err()
+}
+
+func GetAllTransfers() ([]model.Transfer, error) {
+	return repository.GetAllTransfers()
+}

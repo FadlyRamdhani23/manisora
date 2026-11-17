@@ -90,3 +90,12 @@ func ApproveStockOpname(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, o)
 }
+
+func GetStockOpnames(c *gin.Context) {
+	list, err := service.GetAllStockOpnames()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, list)
+}

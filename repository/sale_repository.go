@@ -100,3 +100,24 @@ func GetSaleByID(id int64) (model.Sale, error) {
 	}
 	return s, rows.Err()
 }
+
+func GetAllSales() ([]model.Sale, error) {
+	rows, err := database.DB.Query(
+		"SELECT id, doc_no, DATE_FORMAT(doc_date, '%Y-%m-%d'), location_id, status FROM sales ORDER BY id DESC LIMIT 100",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	list := []model.Sale{}
+	for rows.Next() {
+		var s model.Sale
+		if err := rows.Scan(&s.ID, &s.DocNo, &s.DocDate, &s.LocationID, &s.Status); err != nil {
+			return nil, err
+		}
+		s.Items = []model.SaleItem{}
+		list = append(list, s)
+	}
+	return list, rows.Err()
+}

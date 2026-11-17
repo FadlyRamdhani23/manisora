@@ -92,3 +92,12 @@ func ReceiveTransfer(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, t)
 }
+
+func GetTransfers(c *gin.Context) {
+	list, err := service.GetAllTransfers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, list)
+}

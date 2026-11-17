@@ -70,3 +70,12 @@ func PostSupplierReturn(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, r)
 }
+
+func GetSupplierReturns(c *gin.Context) {
+	list, err := service.GetAllSupplierReturns()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, list)
+}

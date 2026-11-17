@@ -208,3 +208,7 @@ func ApproveStockOpname(id int64) (model.StockOpname, error) {
 	}
 	return GetStockOpnameByID(id)
 }
+
+func GetAllStockOpnames() ([]model.StockOpname, error) {
+	return repository.GetAllStockOpnames()
+}

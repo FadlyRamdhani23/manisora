@@ -177,3 +177,7 @@ func PostSupplierReturn(id int64) (model.SupplierReturn, error) {
 	}
 	return GetSupplierReturnByID(id)
 }
+
+func GetAllSupplierReturns() ([]model.SupplierReturn, error) {
+	return repository.GetAllSupplierReturns()
+}
