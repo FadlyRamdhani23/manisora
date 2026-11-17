@@ -1,6 +1,9 @@
 package repository
 
-import "database/sql"
+import (
+	"database/sql"
+	"errors"
+)
 
 func InsertLedger(tx *sql.Tx, itemID, locationID int64, qtyIn, qtyOut float64,
 	movementType, refType string, refID int64) error {
@@ -22,4 +25,17 @@ func AddStockBalance(tx *sql.Tx, itemID, locationID int64, delta float64) error 
 		itemID, locationID, delta, delta,
 	)
 	return err
+}
+
+// Membaca stok sekaligus mengunci barisnya sampai transaksi selesai
+func GetStockForUpdate(tx *sql.Tx, itemID, locationID int64) (float64, error) {
+	var qty float64
+	err := tx.QueryRow(
+		"SELECT qty_on_hand FROM stock_balances WHERE item_id = ? AND location_id = ? FOR UPDATE",
+		itemID, locationID,
+	).Scan(&qty)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	}
+	return qty, err
 }
