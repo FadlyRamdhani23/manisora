@@ -34,6 +34,7 @@ func main() {
 	r.GET("/stock-opnames/:id", handler.GetStockOpname)
 	r.PUT("/stock-opnames/:id/count", handler.SaveOpnameCount)
 	r.POST("/stock-opnames/:id/approve", handler.ApproveStockOpname)
+	r.GET("/reports/stock-mutation", handler.GetStockMutationReport)
 	r.Run(":8080")
 
 }
